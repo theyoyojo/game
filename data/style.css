@@ -131,17 +131,17 @@ textarea#gambling_outcomes::-webkit-scrollbar {
 	background-color: #003B00;
 }
 
-textarea#msgs::-webkit-scrollbar,
+textarea#msgs::-webkit-scrollbar-button,
 textarea#gambling_outcomes::-webkit-scrollbar-button {
 	background-color: #00FF41;
 }
 
-textarea#msgs::-webkit-scrollbar,
+textarea#msgs::-webkit-scrollbar-track,
 textarea#gambling_outcomes::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
 }
 
-textarea#msgs::-webkit-scrollbar,
+textarea#msgs::-webkit-scrollbar-thumb,
 textarea#gambling_outcomes::-webkit-scrollbar-thumb {
 	background-color: #00FF41;
 	outline: 1px solid black;

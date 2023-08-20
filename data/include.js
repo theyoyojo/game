@@ -26,6 +26,8 @@ function save() {
 	document.cookie = "save=" + JSON.stringify(Game)
 	saved_animation("saved!")
 	stdout("Game Saved At: " + Date())
+
+	update_screen()
 }
 
 var cookie_regex = new RegExp('(?:^|; )save=([^;]*)(?:$|; )');
@@ -66,14 +68,15 @@ function tr(first, second, attrs="", h=false) {
 }
 
 // locations
-var LOC_CRIME = 0
-var LOC_GAMBL = 1
+var LOC_CRIME = 0 // crime
+var LOC_GAMBL = 1 // gambling
 
 // The Game structure is the state of the game at any given time.
 // This initial state is the state of a new game.
 // rate := per-tick dollar earnings
 // bcost := base cost, price of first item
 // scheme: from level n to n+1, rate goes up by 5 as bcost goes up by 10
+// TODO: versioning of saves
 Game = {
 	progress: {gambling: 0},
 	location_: LOC_CRIME,
@@ -146,7 +149,7 @@ function crime_buttons() {
 // sum is 7: 10 chips, else none
 function dice() {
 	if (!modify_coins(-1e6)) {
-		stdout("failed to spend " + x + " coins.")
+		stdout("failed to spend 1e6 coins.")
 		return
 	}
 
@@ -160,13 +163,13 @@ function dice() {
 	win = d6_1 + d6_2 === 7
 	msg += d6_1 + " + " + d6_2 + (win ? "=" : "!=") + " 7 " + (win ? ":)" : ":(") + "\n"
 
-	if (win) {
+	if (win)
 		Game.chips.value += 10
-		update_screen()
-	}
 
 	output = document.getElementById("gambling_outcomes")
 	output.innerHTML += msg
+
+	update_screen()
 }
 
 function gambling_buttons() {
@@ -230,7 +233,9 @@ function update_screen_crime() {
 }
 
 function update_screen_gambling() {
-	// no-op for now
+	textarea = document.getElementById("gambling_outcomes")
+	textarea.scrollTop = textarea.scrollHeight;
+
 }
 
 function update_screen() {
@@ -249,6 +254,9 @@ function update_screen() {
 
 	boost_info = document.getElementById("boost_info")
 	boost_info.innerHTML = get_tick_duration() + " ms"
+
+	textarea = document.getElementById("msgs")
+	textarea.scrollTop = textarea.scrollHeight;
 }
 
 // don't allow coins to fall below 0
