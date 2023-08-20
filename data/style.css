@@ -109,7 +109,7 @@ div#nav p {
 }
 
 /* gambling output area */
-textarea#gambling_outcomes {
+textarea#gambling_outcomes, textarea#msgs {
 	/* outline: 2px solid #e83d2a; */
 	resize: none;
 	width: 100%;
@@ -126,18 +126,22 @@ textarea#gambling_outcomes {
 /* source for .game_output color scheme
  * https://www.schemecolor.com/matrix-code-green.php
  */
+textarea#msgs::-webkit-scrollbar,
 textarea#gambling_outcomes::-webkit-scrollbar {
 	background-color: #003B00;
 }
 
+textarea#msgs::-webkit-scrollbar,
 textarea#gambling_outcomes::-webkit-scrollbar-button {
 	background-color: #00FF41;
 }
 
+textarea#msgs::-webkit-scrollbar,
 textarea#gambling_outcomes::-webkit-scrollbar-track {
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
 }
 
+textarea#msgs::-webkit-scrollbar,
 textarea#gambling_outcomes::-webkit-scrollbar-thumb {
 	background-color: #00FF41;
 	outline: 1px solid black;

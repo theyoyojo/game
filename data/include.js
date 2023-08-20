@@ -8,10 +8,24 @@ function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function saved_animation(msg) {
+	e = document.getElementById("saved")
+	e.innerHTML = msg
+	e.style.color = "black"
+	for (i = 0; i < 2560; i++) {
+		e = document.getElementById("saved")
+		e.style.color = "rgb(" + i + "," + i + "," + i + ")"
+		await sleep(10)
+	}
+
+	e = document.getElementById("saved")
+	e.innerHTML = ""
+}
+
 function save() {
 	document.cookie = "save=" + JSON.stringify(Game)
-	saved = document.getElementById("saved")
-	saved.innerHTML = "Last Saved: " + Date()
+	saved_animation("saved!")
+	stdout("Game Saved At: " + Date())
 }
 
 var cookie_regex = new RegExp('(?:^|; )save=([^;]*)(?:$|; )');
@@ -22,6 +36,13 @@ function load() {
 	raw = decodeURIComponent(match[1])
 
 	Game = JSON.parse(raw)
+	saved_animation("loaded!")
+}
+
+// write to the output area in the footer
+function stdout(msg) {
+	out = document.getElementById("msgs")
+	out.innerHTML += msg + "\n"
 }
 
 function reset() {
@@ -124,8 +145,10 @@ function crime_buttons() {
 // dice game :)
 // sum is 7: 10 chips, else none
 function dice() {
-	if (!modify_coins(-1e6))
+	if (!modify_coins(-1e6)) {
+		stdout("failed to spend " + x + " coins.")
 		return
+	}
 
 	update_screen()
 

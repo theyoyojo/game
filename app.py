@@ -47,6 +47,9 @@ GAME_HTML="""
         <p id="boost_info">BOOSTINFO</p>
       </div>
     </div>
+    <div id="footer">
+      <textarea id="msgs" readonly>WELCOME TO UNDERGROUND SOFTWARE\n</textarea>
+    </div>
   <script src="/data/include.js" /></script>
 """.strip()
 
