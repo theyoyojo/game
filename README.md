@@ -4,11 +4,13 @@
 
 Created by [Joel Savitz](https://joelsavitz.com)
 
-(there is no save mechanism)
-
 [PLAY](/)
 
 Changelog:
+
+v0.1.2
+
+* add save/reload/reset mechanisms
 
 v0.1.1
 
