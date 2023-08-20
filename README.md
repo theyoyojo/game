@@ -8,6 +8,10 @@ Created by [Joel Savitz](https://joelsavitz.com)
 
 Changelog:
 
+v0.2.1
+
+* fix some quirks with output textareas
+
 v0.2.0
 
 * add gambling
