@@ -22,7 +22,6 @@ function load() {
 	raw = decodeURIComponent(match[1])
 
 	Game = JSON.parse(raw)
-
 }
 
 function reset() {
@@ -31,6 +30,18 @@ function reset() {
 	saved = document.getElementById("saved")
 	saved.innerHTML = ""
 	update_screen()
+}
+
+function tr(first, second, attrs="", h=false) {
+	tag = "td"
+	if (h)
+		tag = "th"
+	o = "<" + tag + ">"
+	// only the second gets attrs
+	oa = "<" + tag + " " + attrs + ">"
+	c = "</" + tag + ">\n"
+	res = "<tr>\n" + o + first + c + oa + second + c + "</tr>\n"
+	return res
 }
 
 // The Game structure is the state of the game at any given time.
@@ -66,6 +77,32 @@ Game = {
 // producers array is used to determine where to apply actions on all money-producing entities,
 // e.g. updating buttons, earning coins
 producers = ["ppkts", "mugrs", "hinvs", "cjcks", "robrs", "mafrs", "cscms", "dmogs", "hisps", "ibers"]
+
+function game_table() {
+	content = "<table>\n"
+	content += tr("Key", "Value", attrs="", h=true)
+	content += tr(Game.coins.name, Game.coins.value, attrs=" id=\"" + Game.coins.id + "\" ")
+	content += tr(Game.ticks.name, Game.ticks.value, attrs=" id=\"" + Game.ticks.id + "\" ")
+	for (key of producers) {
+		content += tr(Game[key].name, "BEEF" + Game[key].value, attrs=" id=\"" + Game[key].id + "\" ")
+	}
+	content += "</table>\n"
+	return content
+}
+
+function button(action, id, text) {
+	return "<button onclick=\"" + action + ";\" id=\"" + id + "\">" + text + "</button>\n"
+}
+
+function crime_buttons() {
+	content = ""
+	content += button("steal()", "bt_steal", "Steal")
+
+	for (key of producers)
+		content += button("try_buy('" + Game[key].id.slice(4) + "')", "bt_" + key, "DEAD" + Game[key].name)
+
+	return content
+}
 
 function fixnumber(n) {
 	// get rid of extra bits after second decimal place
@@ -114,10 +151,11 @@ function buy_investment_banker(){try_buy("ibers")}
 
 function button_text(item) {
 	e = Game[item]
-	return "Buy " + e.name + " (" + rate_check(item) + " coin/s) for " + price_check(item) + " coins"
+	return "Buy " + e.name + " (" + rate_check(item) + " coin/t) for " + price_check(item) + " coins"
 }
 
 function update_screen() {
+
 	// update values of main Game items
 	for (const item in Game) {
 		target = document.getElementById(Game[item].id)
@@ -205,6 +243,12 @@ async function tick_loop() {
 }
 
 function init() {
+	table = document.getElementById("numbers")
+	table.innerHTML = game_table()
+
+	table = document.getElementById("actions")
+	table.innerHTML = crime_buttons()
+
 	load()
 	update_screen()
 	tick_loop()
