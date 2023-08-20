@@ -5,7 +5,32 @@
  *
  */
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function save() {
+	document.cookie = "save=" + JSON.stringify(Game)
+	saved = document.getElementById("saved")
+	saved.innerHTML = "Last Saved: " + Date()
+}
+
+var cookie_regex = new RegExp('(?:^|; )save=([^;]*)(?:$|; )');
+function load() {
+	match = document.cookie.match(cookie_regex)
+	if (!match)
+		return
+	raw = decodeURIComponent(match[1])
+
+	Game = JSON.parse(raw)
+
+}
+
+function reset() {
+	for (item in Game)
+		Game[item].value = 0.0
+	saved = document.getElementById("saved")
+	saved.innerHTML = ""
+	update_screen()
 }
 
 // The Game structure is the state of the game at any given time.
@@ -180,6 +205,7 @@ async function tick_loop() {
 }
 
 function init() {
+	load()
 	update_screen()
 	tick_loop()
 }

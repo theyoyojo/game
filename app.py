@@ -15,7 +15,12 @@ FRAME="""
       <br />
     </div>
     <hr />
-    <a href="/info">info</a> | <a href="https://github.com/theyoyojo/game">source</a> <p id="version">%(version)s</p>
+      <a href="/info">info</a> |
+      <a href="https://github.com/theyoyojo/game">source</a> |
+      <p id="reset"><a href="#" onclick="reset()">reset</a></p> |
+      <p id="save"><a href="#" onclick="save()">save</a></p>
+      <p id="saved"></p>
+    <p id="version">%(version)s</p>
     <hr />
     %(content)s
   </body>
