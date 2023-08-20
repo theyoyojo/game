@@ -8,6 +8,13 @@ Created by [Joel Savitz](https://joelsavitz.com)
 
 Changelog:
 
+v0.2.0
+
+* add gambling
+* add output messages
+* enhance style
+* animate save/load message
+
 v0.1.2
 
 * add save/reload/reset mechanisms
@@ -17,6 +24,6 @@ v0.1.1
 * add information page
 * add boost mechanism
 
-v0.1:
+v0.1.0
 
 * initial release of game

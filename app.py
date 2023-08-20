@@ -1,6 +1,6 @@
 import markdown
 
-VERSION = "v0.1.2"
+VERSION = "v0.2.0"
 
 FRAME="""
 <!DOCTYPE html />
