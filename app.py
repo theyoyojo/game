@@ -1,6 +1,8 @@
-VERSION = "v0.1"
+import markdown
 
-HTML="""
+VERSION = "v0.1.1"
+
+FRAME="""
 <!DOCTYPE html />
 <html>
   <head>
@@ -8,13 +10,19 @@ HTML="""
   </head>
   <body>
     <div id="header">
-      <img id="logo" src="/data/US.png" />
+      <a href="/"><img id="logo" src="/data/US.png" /></a>
       <h1 id="title">Underground Software Clicker</h1>
       <br />
     </div>
     <hr />
-    <p id="version">%(version)s</p>
+    <a href="/info">info</a> | <a href="https://github.com/theyoyojo/game">source</a> <p id="version">%(version)s</p>
     <hr />
+    %(content)s
+  </body>
+</html>
+""".strip()
+
+GAME_HTML="""
     <div id="game">
       <div id="numbers">
         <table>
@@ -86,12 +94,22 @@ HTML="""
         <button onclick="buy_investment_banker()" id="bt_ibers">INVESTMENT BANKERS</button>
       </div>
     </div>
+    <div id="bonus">
+      <div id="boost">
+        <button onclick="do_boost()">Boost tick speed</button>
+        <progress id="boost_bar" value="0" max="100" title="boost"/></progress>
+        <p id="boost_info">BOOSTINFO</p>
+      </div>
+    </div>
   <script src="/data/include.js" /></script>
-  </body>
-</html>
 """.strip()
 
 def application(env, SR):
-    game = bytes(HTML % {"version": VERSION}, "UTF-8")
+    path_info = env.get("PATH_INFO", "/")
     SR('200 OK', [('Content-Type', 'text/html')])
-    return game
+    if path_info == "/info":
+        content = ""
+        with open("README.md", "r") as f:
+            content += markdown.markdown(f.read())
+        return bytes(FRAME % {"version": VERSION, "content": content}, "UTF-8")
+    return bytes(FRAME % {"version": VERSION, "content": GAME_HTML}, "UTF-8")

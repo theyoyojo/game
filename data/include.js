@@ -108,6 +108,9 @@ function update_screen() {
 		else
 			bt.disabled = ""
 	}
+
+	boost_info = document.getElementById("boost_info")
+	boost_info.innerHTML = get_tick_duration() + " ms"
 }
 
 // don't allow coins to fall below 0
@@ -136,13 +139,43 @@ function earn_coins_for_tick() {
 	Game.coins.value += earned
 }
 
+boost = 0
+boost_decay = 0
+function do_boost() {
+	if (boost < 100)
+		boost++
+
+	boost_decay = 0
+
+	bar = document.getElementById("boost_bar")
+	bar.value = boost
+}
+
+function decay_boost() {
+	if (boost > 0)
+		boost -= boost_decay
+		boost_decay++
+
+	if (boost < 0)
+		boost = 0
+
+	bar = document.getElementById("boost_bar")
+	bar.value = boost
+}
+
+function get_tick_duration() {
+	return fixnumber(1000 - (900 * (boost/100)))
+
+}
+
 // This main game loop runs forever on page load.
 async function tick_loop() {
 	for (;;) {
 		Game.ticks.value++
 		earn_coins_for_tick()
 		update_screen()
-		await sleep(1000)
+		decay_boost()
+		await sleep(get_tick_duration())
 	}
 }
 

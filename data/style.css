@@ -51,6 +51,11 @@ th {
 	border-bottom: 1px solid black;
 }
 
+/* align the second column (numbers) to the right */
+td:nth-child(2) {
+	text-align: right;
+}
+
 /* make sure the buttons are sufficiently wide */
 #actions button {
 	min-width: 30em;
@@ -67,4 +72,28 @@ p#version {
 	margin: 0;
 	color: gray;
 	text-align: right;
+	display: inline-flex;
+	float: right;
+}
+
+/* give the bonus section some space */
+div#bonus {
+	margin: 1em;
+}
+
+/* info for bonus section */
+#bonus p {
+	display: inline;
+	text-align: right;
+}
+
+/* give some flair to the boost bar */
+div#boost {
+	border: 1px solid black;
+	padding: 2px;
+}
+
+/* bigger bar = more progress */
+#boost progress {
+	width: 20em;
 }
