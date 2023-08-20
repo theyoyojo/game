@@ -1,0 +1,51 @@
+body {
+	margin: 0 auto;
+	width: 70%;
+
+	/* background: green; */
+}
+
+div#game{
+    display: flex;
+    flex-direction: row;
+    align-content: space-around;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+div#header {
+	display: flex;
+}
+
+div#numbers {
+	float: left;
+}
+
+div#actions {
+	display: flex;
+    	flex-direction: column;
+}
+
+#header h1{
+	/* #vertical-align: middle; */
+	margin: auto;
+}
+
+img {
+	width: 100px;
+	height: 100px;
+}
+
+h1 {
+	color: red;
+}
+
+
+table {
+	border: 1px solid black;
+	width: 10em;
+}
+
+th {
+	border-bottom: 1px solid black;
+}
