@@ -44,13 +44,21 @@ function tr(first, second, attrs="", h=false) {
 	return res
 }
 
+// locations
+var LOC_CRIME = 0
+var LOC_GAMBL = 1
+
 // The Game structure is the state of the game at any given time.
 // This initial state is the state of a new game.
 // rate := per-tick dollar earnings
 // bcost := base cost, price of first item
 // scheme: from level n to n+1, rate goes up by 5 as bcost goes up by 10
 Game = {
+	progress: {gambling: 0},
+	location_: LOC_CRIME,
 	coins: {name: "Coins",		value:0.0, 	id: "tab_coins"},
+	chips: {name: "Chips",		value:0.0, 	id: "tab_chips"},
+	income:{name :"Income/Tick",value:0.0,	id: "tab_income"},
 	ticks: {name: "Ticks",		value:0, 	id: "tab_ticks"},
 	// ppkts := pickpockets
 	ppkts: {name: "Pickpockets",	value:0, 	id: "tab_ppkts", 	rate: 5 ** 0,	bcost: 10 ** 1},
@@ -81,8 +89,10 @@ producers = ["ppkts", "mugrs", "hinvs", "cjcks", "robrs", "mafrs", "cscms", "dmo
 function game_table() {
 	content = "<table>\n"
 	content += tr("Key", "Value", attrs="", h=true)
-	content += tr(Game.coins.name, Game.coins.value, attrs=" id=\"" + Game.coins.id + "\" ")
-	content += tr(Game.ticks.name, Game.ticks.value, attrs=" id=\"" + Game.ticks.id + "\" ")
+	content += tr(Game.coins.name, Game.coins.value, attrs=' id="' + Game.coins.id + '" ')
+	content += tr(Game.chips.name, Game.chips.value, attrs=' id="' + Game.chips.id + '" ')
+	content += tr(Game.income.name, Game.income.value, attrs=' id="' + Game.income.id + '" ')
+	content += tr(Game.ticks.name, Game.ticks.value, attrs=' id="' + Game.ticks.id + '" ')
 	for (key of producers) {
 		content += tr(Game[key].name, "BEEF" + Game[key].value, attrs=" id=\"" + Game[key].id + "\" ")
 	}
@@ -90,8 +100,15 @@ function game_table() {
 	return content
 }
 
+function make_nav() {
+	if (Game.progress.gambling <= 0)
+		return ""
+
+	return '<p>Rooms: <a href="#" onclick="goto_crime()">Crime</a> | <a href="#" onclick="goto_gambling()">Gambling</a></p><hr /><br />'
+}
+
 function button(action, id, text) {
-	return "<button onclick=\"" + action + ";\" id=\"" + id + "\">" + text + "</button>\n"
+	return '<button onclick="' + action + ';" id="' + id + '">' + text + '</button>\n'
 }
 
 function crime_buttons() {
@@ -100,6 +117,40 @@ function crime_buttons() {
 
 	for (key of producers)
 		content += button("try_buy('" + Game[key].id.slice(4) + "')", "bt_" + key, "DEAD" + Game[key].name)
+
+	return content
+}
+
+// dice game :)
+// sum is 7: 10 chips, else none
+function dice() {
+	if (!modify_coins(-1e6))
+		return
+
+	update_screen()
+
+	d6_1 = Math.floor(Math.random() * 6)
+	d6_2 = Math.floor(Math.random() * 6)
+	msg  = "ROLL:\n=====\n"
+	msg += "d6_1: " + d6_1 + "\n"
+	msg += "d6_2: " + d6_2 + "\n"
+	win = d6_1 + d6_2 === 7
+	msg += d6_1 + " + " + d6_2 + (win ? "=" : "!=") + " 7 " + (win ? ":)" : ":(") + "\n"
+
+	if (win) {
+		Game.chips.value += 10
+		update_screen()
+	}
+
+	output = document.getElementById("gambling_outcomes")
+	output.innerHTML += msg
+}
+
+function gambling_buttons() {
+	content = ""
+
+	content += '<textarea id="gambling_outcomes" readonly></textarea>\n'
+	content += button("dice()", "bt_dice", "Roll for 1e6 coins")
 
 	return content
 }
@@ -138,30 +189,12 @@ function try_buy(item) {
 	update_screen()
 }
 
-function buy_pickpocket() 	{try_buy("ppkts")}
-function buy_mugger() 		{try_buy("mugrs")}
-function buy_home_invader() 	{try_buy("hinvs")}
-function buy_carjacker() 	{try_buy("cjcks")}
-function buy_bank_robber() 	{try_buy("robrs")}
-function buy_mail_fraudster() 	{try_buy("mafrs")}
-function buy_crypto_scammer() 	{try_buy("cscms")}
-function buy_darknet_mogul() 	{try_buy("dmogs")}
-function buy_high_seas_pirate() {try_buy("hisps")}
-function buy_investment_banker(){try_buy("ibers")}
-
 function button_text(item) {
 	e = Game[item]
 	return "Buy " + e.name + " (" + rate_check(item) + " coin/t) for " + price_check(item) + " coins"
 }
 
-function update_screen() {
-
-	// update values of main Game items
-	for (const item in Game) {
-		target = document.getElementById(Game[item].id)
-		target.innerHTML = fixnumber(Game[item].value)
-	}
-
+function update_screen_crime() {
 	for (key of producers) {
 		btname = "bt_" + key
 		bt = document.getElementById(btname)
@@ -171,6 +204,25 @@ function update_screen() {
 		else
 			bt.disabled = ""
 	}
+}
+
+function update_screen_gambling() {
+	// no-op for now
+}
+
+function update_screen() {
+
+	// update values of main Game items
+	for (const item in Game) {
+		target = document.getElementById(Game[item].id)
+		if (target)
+			target.innerHTML = fixnumber(Game[item].value)
+	}
+
+	if (Game.location_ === LOC_CRIME)
+		update_screen_crime()
+	else if (Game.location_ === LOC_GAMBL)
+		update_screen_gambling()
 
 	boost_info = document.getElementById("boost_info")
 	boost_info.innerHTML = get_tick_duration() + " ms"
@@ -199,6 +251,8 @@ function earn_coins_for_tick() {
 	for (key of producers)
 		earned += Game[key].value * Game[key].rate
 
+	// income reflects this calculation
+	Game.income.value = earned
 	Game.coins.value += earned
 }
 
@@ -212,6 +266,8 @@ function do_boost() {
 
 	bar = document.getElementById("boost_bar")
 	bar.value = boost
+
+	update_screen()
 }
 
 function decay_boost() {
@@ -231,6 +287,14 @@ function get_tick_duration() {
 
 }
 
+function check_progress() {
+	if (Game.coins.value > 10 ** 6 && Game.progress.gambling < 1) {
+		Game.progress.gambling = 1
+		nav = document.getElementById("nav")
+		nav.innerHTML = make_nav()
+	}
+}
+
 // This main game loop runs forever on page load.
 async function tick_loop() {
 	for (;;) {
@@ -238,18 +302,47 @@ async function tick_loop() {
 		earn_coins_for_tick()
 		update_screen()
 		decay_boost()
+		check_progress()
 		await sleep(get_tick_duration())
 	}
 }
 
-function init() {
+function goto_crime() {
+	Game.location_ = LOC_CRIME
+
+	nav = document.getElementById("nav")
+	nav.innerHTML = make_nav()
+
+	// put the main game data table in the numbers section on the left
 	table = document.getElementById("numbers")
 	table.innerHTML = game_table()
 
-	table = document.getElementById("actions")
-	table.innerHTML = crime_buttons()
+	buttons = document.getElementById("actions")
+	buttons.innerHTML = crime_buttons()
 
+	update_screen()
+}
+
+function goto_gambling() {
+	Game.location_ = LOC_GAMBL
+
+	nav = document.getElementById("nav")
+	nav.innerHTML = make_nav()
+
+	// put the main game data table in the numbers section on the left
+	table = document.getElementById("numbers")
+	table.innerHTML = game_table()
+
+	buttons = document.getElementById("actions")
+	buttons.innerHTML = gambling_buttons()
+
+	update_screen()
+}
+
+function init() {
+	// initially, no other rooms are visible besides crime
 	load()
+	goto_crime()
 	update_screen()
 	tick_loop()
 }

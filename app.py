@@ -29,9 +29,15 @@ FRAME="""
 
 GAME_HTML="""
     <div id="game">
-      <div id="numbers">
+      <div id="nav">
       </div>
-      <div id="actions">
+      <div id="panels">
+        <div id="numbers">
+          (empty)
+        </div>
+        <div id="actions">
+          (empty)
+        </div>
       </div>
     </div>
     <div id="bonus">
