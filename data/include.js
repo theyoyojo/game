@@ -293,7 +293,7 @@ function gambling_buttons() {
 	content = ""
 
 	content += '<textarea id="gambling_outcomes" readonly></textarea>\n'
-	content += button("dice()", "bt_dice", "Roll for 1e6 coins")
+	content += button("dice()", "bt_dice", "Roll dice for 1e6 coins")
 	// at level 2 we get slot
 	if (Game.progress.gambling >= 2)
 		content += button("slots()", "bt_slots", "Play slots for 1 chip")
@@ -330,15 +330,19 @@ function rate_check(item) {
 	return fixnumber(Game[item].rate)
 }
 
+function singular(item) {
+	return Game[item].name.slice(0, Game[item].name.length-1)
+}
+
 function try_buy(item) {
 	if (modify_coins(-1 * price_check(item)))
 		Game[item].value++
+	stdout("Bought one " + singular(item))
 	update_screen()
 }
 
 function button_text(item) {
-	e = Game[item]
-	return "Buy " + e.name + " (" + rate_check(item) + " coin/t) for " + price_check(item) + " coins"
+	return "Buy " + singular(item)+ " (" + rate_check(item) + " coin/t) for " + price_check(item) + " coins"
 }
 
 function update_screen_crime() {
