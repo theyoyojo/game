@@ -4,18 +4,22 @@
 
 Created by [Joel Savitz](https://joelsavitz.com)
 
-[PLAY](/)
+[\[PLAY\]](/)
 
 Changelog:
+
+v0.2.3
+
+* Fix display of singular nouns
 
 v0.2.2
 
 * add slots (unlocked at 100 chips)
-   * roll three digits
-   * animated
-   * win 2 chips for each pair of numbers
-   * win 100 chips for three matching nymbers
-   * win 20 chips for each seven
+	* roll three digits
+   	* animated
+	* win 2 chips for each pair of numbers
+   	* win 100 chips for three matching nymbers
+   	* win 20 chips for each seven
 
 v0.2.1
 
