@@ -145,6 +145,119 @@ function crime_buttons() {
 	return content
 }
 
+function get_slot_frame(n, a, b, c) {
+
+	msg = "SLOTS:\n"
+	// + 2 for newlines
+	for (i = 0; i < 25 * 3 + 2; i++) {
+		if (i < 25) {
+			if (i === n || i - 2 % 25 == n)
+				msg += 'O'
+			else
+				msg += 'o'
+		} else if (i > 51) {
+			// -2 for each newline
+			if (i == n || i - 2 % 25 === n)
+				msg +=  'O'
+			else
+				msg += 'o'
+		} else if (i === 25 || i === 51) {
+			msg += '\n'
+		} else if (i > 25 && i < 31) {
+			msg += '>'
+		} else if ((i > 30 && i < 36) || (i > 40 && i < 46) || (i === 37) || (i === 39)) {
+			msg += ' '
+		} else if (i > 45 && i < 51) {
+			msg += '<'
+		} else if (i === 36) { // frame a
+			if (n > 24)
+				msg += a
+			else
+				msg += '_'
+		} else if (i === 38) { // frame b
+			if (n > 49)
+				msg += b
+			else
+				msg += '_'
+		} else if (i === 40) { // frame c
+			if (n > 74)
+				msg += c
+			else
+				msg += '_'
+		} else {
+			stdout("ERROR!!!! i = " + i)
+		}
+
+	}
+
+	return msg + "\n"
+}
+
+function hardsleep(ms) {
+	  var start = new Date().getTime(), expire = start + ms;
+	  while (new Date().getTime() < expire) { }
+	  return;
+}
+
+async function slots(cheat=false) {
+	if (!modify_chips(-1)) {
+		stdout("failed to spend a chip .")
+		return
+	}
+
+	stdout("You play slots...")
+
+	update_screen()
+
+	a = Math.floor(Math.random() * 10)
+	b = Math.floor(Math.random() * 10)
+	c = Math.floor(Math.random() * 10)
+
+	if (cheat)
+		a = b = c = 7
+
+	for (f = 0; f < 25 * 3 + 2; f++) {
+		output = document.getElementById("gambling_outcomes")
+		output.innerHTML = get_slot_frame(f, a, b, c)
+
+		await sleep(30)
+	}
+
+	// dubs: +2
+	// trips +100
+	// any 7:+ 20
+	dub = false
+	trip = false
+	sevens = 0
+	if (a === b) {
+		dub = true
+		if (b == c) {
+			trip = true
+		}
+	} else  {
+		if (a === c || a === b || b == c)
+			dub = true
+	}
+
+	if (a === 7)
+		sevens++
+	if (b === 7)
+		sevens++
+	if (c === 7)
+		sevens++
+
+	winnings = (dub ? (trip ? 100 : 2) + 20 * sevens : 0)
+	if (trip)
+		stdout("JACKPOT! You win 100 chips")
+	else if (dub)
+		stdout("Doubles! You win 2 chips")
+
+	if (sevens > 0)
+		stdout("Wow! " + sevens + " sevens! You win " + 20 * sevens + " chips")
+
+	Game.chips.value += winnings
+}
+
 // dice game :)
 // sum is 7: 10 chips, else none
 function dice() {
@@ -153,18 +266,22 @@ function dice() {
 		return
 	}
 
+	stdout("You roll the dice...")
+
 	update_screen()
 
-	d6_1 = Math.floor(Math.random() * 6)
-	d6_2 = Math.floor(Math.random() * 6)
+	d6_1 = Math.floor(Math.random() * 6) + 1
+	d6_2 = Math.floor(Math.random() * 6) + 1
 	msg  = "ROLL:\n=====\n"
 	msg += "d6_1: " + d6_1 + "\n"
 	msg += "d6_2: " + d6_2 + "\n"
 	win = d6_1 + d6_2 === 7
-	msg += d6_1 + " + " + d6_2 + (win ? "=" : "!=") + " 7 " + (win ? ":)" : ":(") + "\n"
+	msg += d6_1 + " + " + d6_2 + (win ? " =" : " !=") + " 7 " + (win ? ":)" : ":(") + "\n"
 
-	if (win)
+	if (win) {
 		Game.chips.value += 10
+		stdout("You win 10 chips!")
+	}
 
 	output = document.getElementById("gambling_outcomes")
 	output.innerHTML += msg
@@ -177,6 +294,10 @@ function gambling_buttons() {
 
 	content += '<textarea id="gambling_outcomes" readonly></textarea>\n'
 	content += button("dice()", "bt_dice", "Roll for 1e6 coins")
+	// at level 2 we get slot
+	if (Game.progress.gambling >= 2)
+		content += button("slots()", "bt_slots", "Play slots for 1 chip")
+
 
 	return content
 }
@@ -268,11 +389,20 @@ function modify_coins(x) {
 	return true
 }
 
+function modify_chips(x) {
+	if (Game.chips.value + x < 0)
+		return false
+
+	Game.chips.value += x
+	return true
+}
+
 
 // rob from the poor and give to the rich
 function steal() {
 	modify_coins(1)
 	update_screen()
+	stdout("You steal a coin.")
 }
 
 function earn_coins_for_tick() {
@@ -319,10 +449,23 @@ function get_tick_duration() {
 }
 
 function check_progress() {
-	if (Game.coins.value > 10 ** 6 && Game.progress.gambling < 1) {
+	// Unlock gambling at 1 million coins
+	if (Game.coins.value > 1e6 && Game.progress.gambling < 1) {
 		Game.progress.gambling = 1
 		nav = document.getElementById("nav")
 		nav.innerHTML = make_nav()
+		stdout("UNLOCKED: The Gambling Room -- Dice Game")
+	}
+	// Unlock slots at 100 chips
+	if (Game.chips.value > 100 && Game.progress.gambling < 2) {
+		Game.progress.gambling = 2
+		nav = document.getElementById("nav")
+		nav.innerHTML = make_nav()
+		stdout("UNLOCKED: The Gambling Room -- Slot Machine")
+		// if we are already in gambling, we need to reload to get the button
+		if (Game.location_ === LOC_GAMBL)
+			goto_gambling()
+		// however, we we are somewhere else, wait to load when we go to the room
 	}
 }
 
