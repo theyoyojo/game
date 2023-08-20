@@ -1,3 +1,5 @@
+VERSION = "v0.1"
+
 HTML="""
 <!DOCTYPE html />
 <html>
@@ -10,6 +12,8 @@ HTML="""
       <h1 id="title">Underground Software Clicker</h1>
       <br />
     </div>
+    <hr />
+    <p id="version">%(version)s</p>
     <hr />
     <div id="game">
       <div id="numbers">
@@ -88,6 +92,6 @@ HTML="""
 """.strip()
 
 def application(env, SR):
-    game = bytes(HTML, "UTF-8")
+    game = bytes(HTML % {"version": VERSION}, "UTF-8")
     SR('200 OK', [('Content-Type', 'text/html')])
     return game

@@ -51,7 +51,20 @@ th {
 	border-bottom: 1px solid black;
 }
 
-/* make sure the buttons are sufficiently wide
+/* make sure the buttons are sufficiently wide */
 #actions button {
 	min-width: 30em;
+}
+
+/* less space between the horizontal rule lines under the header */
+hr {
+	margin: 4px 0px;
+}
+
+/* gray, italicized version tag on thr right between the horizontal rule lines */
+p#version {
+	font-style: italic;
+	margin: 0;
+	color: gray;
+	text-align: right;
 }
