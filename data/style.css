@@ -1,10 +1,9 @@
 body {
 	margin: 0 auto;
 	width: 70%;
-
-	/* background: green; */
 }
 
+/* two panels: one for numbers table and one for buttons */
 div#game{
     display: flex;
     flex-direction: row;
@@ -13,39 +12,46 @@ div#game{
     justify-content: space-evenly;
 }
 
+/* logo and text next to each other */
 div#header {
 	display: flex;
 }
 
-div#numbers {
-	float: left;
+/* center header text */
+#header h1{
+	margin: auto;
 }
 
+/* buttons on top of each other */
 div#actions {
 	display: flex;
     	flex-direction: column;
 }
 
-#header h1{
-	/* #vertical-align: middle; */
-	margin: auto;
-}
-
-img {
+/* shrink logo */
+img#logo {
 	width: 100px;
 	height: 100px;
 }
 
-h1 {
+/* red title */
+h1#title {
 	color: red;
 }
 
 
-table {
+/* some flair for the numbers table */
+#numbers table {
 	border: 1px solid black;
 	width: 10em;
+	min-width: 20em;
 }
 
 th {
 	border-bottom: 1px solid black;
+}
+
+/* make sure the buttons are sufficiently wide
+#actions button {
+	min-width: 30em;
 }
