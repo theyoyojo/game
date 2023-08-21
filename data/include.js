@@ -15,7 +15,7 @@ async function saved_animation(msg) {
 	for (i = 0; i < 2560; i++) {
 		e = document.getElementById("saved")
 		e.style.color = "rgb(" + i + "," + i + "," + i + ")"
-		await sleep(10)
+		await sleep(10/amphetamines)
 	}
 
 	e = document.getElementById("saved")
@@ -70,6 +70,26 @@ function tr(first, second, attrs="", h=false) {
 // locations
 var LOC_CRIME = 0 // crime
 var LOC_GAMBL = 1 // gambling
+var LOC_USURY = 2 // Usury
+var LOC_BHCKG = 3 // Biohacking
+
+Rooms = {
+	crime: {name: "Crime", 		id: LOC_CRIME,	go: "goto_crime()"},
+	gambl: {name: "Gambling", 	id: LOC_GAMBL,	go: "goto_gambling()"},
+	usury: {name: "Usury", 		id: LOC_USURY,	go: "goto_usury()"},
+	bhckg: {name: "Biohacking",	id: LOC_BHCKG,	go: "goto_biohacking()"},
+}
+
+rooms = ['crime', 'gambl', 'usury', 'bhckg']
+
+function get_room_by_id(id) {
+	for (key of rooms) {
+		if (Rooms[key].id === id)
+			return key
+	}
+
+	return null
+}
 
 // The Game structure is the state of the game at any given time.
 // This initial state is the state of a new game.
@@ -78,11 +98,14 @@ var LOC_GAMBL = 1 // gambling
 // scheme: from level n to n+1, rate goes up by 5 as bcost goes up by 10
 // TODO: versioning of saves
 Game = {
-	progress: {gambling: 0},
-	location_: LOC_CRIME,
+	progress: {gambling: 0, biohacking: 0, usury: 0},
+	location_: LOC_GAMBL,
 	coins: {name: "Coins",		value:0.0, 	id: "tab_coins"},
 	chips: {name: "Chips",		value:0.0, 	id: "tab_chips"},
-	income:{name :"Income/Tick",value:0.0,	id: "tab_income"},
+	// need extra space to get cut off since Luck is already plural for Luck (not quantifiable)
+	luck: {name: "Luck ",		value:1.0, 	id: "tab_luck",		rate: 0.001, 	bcost: 50, 	curr: "chips"},
+	blessing: {name: "Blessing",	value:1, 	id: "tab_blessing"},
+	income:{name :"Income/Tick",	value:0.0,	id: "tab_income"},
 	ticks: {name: "Ticks",		value:0, 	id: "tab_ticks"},
 	// ppkts := pickpockets
 	ppkts: {name: "Pickpockets",	value:0, 	id: "tab_ppkts", 	rate: 5 ** 0,	bcost: 10 ** 1},
@@ -110,13 +133,13 @@ Game = {
 // e.g. updating buttons, earning coins
 producers = ["ppkts", "mugrs", "hinvs", "cjcks", "robrs", "mafrs", "cscms", "dmogs", "hisps", "ibers"]
 
-function game_table() {
+function crime_table() {
 	content = "<table>\n"
 	content += tr("Key", "Value", attrs="", h=true)
-	content += tr(Game.coins.name, Game.coins.value, attrs=' id="' + Game.coins.id + '" ')
-	content += tr(Game.chips.name, Game.chips.value, attrs=' id="' + Game.chips.id + '" ')
-	content += tr(Game.income.name, Game.income.value, attrs=' id="' + Game.income.id + '" ')
-	content += tr(Game.ticks.name, Game.ticks.value, attrs=' id="' + Game.ticks.id + '" ')
+	content += tr(Game.coins.name, 	Game.coins.value, 	attrs=' id="' + Game.coins.id + '" ')
+	content += tr(Game.chips.name, 	Game.chips.value, 	attrs=' id="' + Game.chips.id + '" ')
+	content += tr(Game.income.name, Game.income.value, 	attrs=' id="' + Game.income.id + '" ')
+	content += tr(Game.ticks.name, 	Game.ticks.value, 	attrs=' id="' + Game.ticks.id + '" ')
 	for (key of producers) {
 		content += tr(Game[key].name, "BEEF" + Game[key].value, attrs=" id=\"" + Game[key].id + "\" ")
 	}
@@ -124,11 +147,40 @@ function game_table() {
 	return content
 }
 
+
+function biohacking_table() {
+	content = "<table>\n"
+	content += tr("Key", "Value", attrs="", h=true)
+
+	content += tr(Game.coins.name, 	Game.coins.value, 	attrs=' id="' + Game.coins.id + '" ')
+	content += tr(Game.chips.name, 	Game.chips.value, 	attrs=' id="' + Game.chips.id + '" ')
+	content += tr(Game.income.name, Game.income.value, 	attrs=' id="' + Game.income.id + '" ')
+	content += tr(Game.ticks.name, 	Game.ticks.value, 	attrs=' id="' + Game.ticks.id + '" ')
+	content += tr(Game.luck.name, 	Game.luck.value, 	attrs=' id="' + Game.luck.id + '" ')
+	content += tr(Game.blessing.name, Game.blessing.value, 	attrs=' id="' + Game.blessing.id + '" ')
+
+	content += "</table>\n"
+	return content
+}
+
+function room_goto_button(loc) {
+	return '<a href="#" onclick="' + Rooms[get_room_by_id(loc)].go + ';">' + Rooms[get_room_by_id(loc)].name + '</a>'
+}
+
 function make_nav() {
 	if (Game.progress.gambling <= 0)
 		return ""
 
-	return '<p>Rooms: <a href="#" onclick="goto_crime()">Crime</a> | <a href="#" onclick="goto_gambling()">Gambling</a></p><hr /><br />'
+	nav = '<p>Rooms: ' + room_goto_button(LOC_CRIME) + ' | ' + room_goto_button(LOC_GAMBL)
+
+	if (Game.progress.biohacking)
+		nav += ' | ' + room_goto_button(LOC_BHCKG)
+
+	if (Game.progress.usury)
+		nav += ' | ' + room_goto_button(LOC_USURY)
+
+	return nav + '</p><hr /><br />'
+
 }
 
 function button(action, id, text) {
@@ -193,15 +245,10 @@ function get_slot_frame(n, a, b, c) {
 	return msg + "\n"
 }
 
-function hardsleep(ms) {
-	  var start = new Date().getTime(), expire = start + ms;
-	  while (new Date().getTime() < expire) { }
-	  return;
-}
 
 async function slots(cheat=false) {
 	if (!modify_chips(-1)) {
-		stdout("failed to spend a chip .")
+		stdout("failed to spend a chip.")
 		return
 	}
 
@@ -215,13 +262,6 @@ async function slots(cheat=false) {
 
 	if (cheat)
 		a = b = c = 7
-
-	for (f = 0; f < 25 * 3 + 2; f++) {
-		output = document.getElementById("gambling_outcomes")
-		output.innerHTML = get_slot_frame(f, a, b, c)
-
-		await sleep(30)
-	}
 
 	// dubs: +2
 	// trips +100
@@ -256,6 +296,13 @@ async function slots(cheat=false) {
 		stdout("Wow! " + sevens + " sevens! You win " + 20 * sevens + " chips")
 
 	Game.chips.value += winnings
+
+	for (f = 0; f < 25 * 3 + 2 + 1; f++) {
+		output = document.getElementById("gambling_outcomes")
+		output.innerHTML = get_slot_frame(f, a, b, c)
+
+		await sleep(30)
+	}
 }
 
 // dice game :)
@@ -302,10 +349,37 @@ function gambling_buttons() {
 	return content
 }
 
-function fixnumber(n) {
-	// get rid of extra bits after second decimal place
+function usury_left() {
+	return '<p>(empty left)</p>'
+}
+
+function usury_right() {
+	return '<p>(empty right)</p>'
+}
+
+function try_buy_luck() {
+	if (!modify_chips(-1 * price_check("luck"))) {
+		stdout("failed to spend " + price_check("luck") + " chips.")
+		return
+	}
+
+	Game.luck.value += Game.luck.rate
+	stdout("increase luck by " + fixnumber(Game.luck.rate, prec=3) + " to " + fixnumber(Game.luck.value, prec=3))
+
+	update_screen()
+}
+
+function biohacking_right() {
+	content = ""
+	content += button("try_buy_luck();", "bt_luck", "DEAD" + Game["luck"].name)
+
+	return content
+}
+
+function fixnumber(n, prec=2) {
+	// get rid of extra bits after 2nd decimal place (by default 2 but  use prec=n to change to nth)
 	if (n % 1)
-		n = Math.round(n * 100)/100
+		n = Math.round(n * (10 ** prec))/(10 ** prec)
 
 	// no really big numbers, where really big means log10(x) > 5
 	if (Math.log10(n) > 5)
@@ -326,8 +400,15 @@ function price_check(item) {
 }
 
 
-function rate_check(item) {
-	return fixnumber(Game[item].rate)
+function rate_check(item, prec=2) {
+	return fixnumber(Game[item].rate, prec=prec)
+}
+
+function rate_check_str(item, prec=2) {
+	if (Game[item].curr)
+		return "(increase by " + rate_check(item, prec=prec) + ")"
+	else
+		return "(" + rate_check(item, prec=prec) + " coins/t)"
 }
 
 function singular(item) {
@@ -341,8 +422,13 @@ function try_buy(item) {
 	update_screen()
 }
 
-function button_text(item) {
-	return "Buy " + singular(item)+ " (" + rate_check(item) + " coin/t) for " + price_check(item) + " coins"
+function button_text(item, prec=2) {
+	curr = 'coins'
+
+	if (Game[item].curr)
+		curr = Game[item].curr
+
+	return "Buy " + singular(item)+ " " + rate_check_str(item, prec=prec) + " for " + price_check(item) + " " + curr
 }
 
 function update_screen_crime() {
@@ -362,6 +448,19 @@ function update_screen_gambling() {
 	textarea.scrollTop = textarea.scrollHeight;
 
 }
+function update_screen_biohacking() {
+	btname = "bt_luck"
+	bt = document.getElementById(btname)
+	bt.innerHTML = button_text("luck", prec=3)
+	if (price_check("luck") > Game.chips.value)
+		bt.disabled = "true"
+	else
+		bt.disabled = ""
+}
+
+function update_screen_usury() {
+
+}
 
 function update_screen() {
 
@@ -369,13 +468,17 @@ function update_screen() {
 	for (const item in Game) {
 		target = document.getElementById(Game[item].id)
 		if (target)
-			target.innerHTML = fixnumber(Game[item].value)
+			target.innerHTML = fixnumber(Game[item].value, prec=3)
 	}
 
 	if (Game.location_ === LOC_CRIME)
 		update_screen_crime()
 	else if (Game.location_ === LOC_GAMBL)
 		update_screen_gambling()
+	else if (Game.location_ === LOC_BHCKG)
+		update_screen_biohacking()
+	else if (Game.location_ === LOC_USURY)
+		update_screen_sury()
 
 	boost_info = document.getElementById("boost_info")
 	boost_info.innerHTML = get_tick_duration() + " ms"
@@ -421,6 +524,10 @@ function earn_coins_for_tick() {
 	Game.coins.value += earned
 }
 
+function accumulate_blessing() {
+	Game.blessing.value *= Game.luck.value
+}
+
 boost = 0
 boost_decay = 0
 function do_boost() {
@@ -436,9 +543,13 @@ function do_boost() {
 }
 
 function decay_boost() {
-	if (boost > 0)
+	if (amphetamines > 99)
+		return
+
+	if (boost > 0) {
 		boost -= boost_decay
 		boost_decay++
+	}
 
 	if (boost < 0)
 		boost = 0
@@ -448,8 +559,7 @@ function decay_boost() {
 }
 
 function get_tick_duration() {
-	return fixnumber(1000 - (900 * (boost/100)))
-
+	return fixnumber(1000 - (900 * (boost/100)))/amphetamines
 }
 
 function check_progress() {
@@ -460,6 +570,7 @@ function check_progress() {
 		nav.innerHTML = make_nav()
 		stdout("UNLOCKED: The Gambling Room -- Dice Game")
 	}
+	
 	// Unlock slots at 100 chips
 	if (Game.chips.value > 100 && Game.progress.gambling < 2) {
 		Game.progress.gambling = 2
@@ -471,6 +582,21 @@ function check_progress() {
 			goto_gambling()
 		// however, we we are somewhere else, wait to load when we go to the room
 	}
+	// Unlock biohacking at 200 chips
+	if (Game.chips.value > 200 && Game.progress.biohacking < 1) {
+		Game.progress.biohacking = 1
+		nav = document.getElementById("nav")
+		nav.innerHTML = make_nav()
+		stdout("UNLOCKED: Biohacking")
+	}
+
+	// Unlock usury at 1000 chips
+	if (Game.chips.value > 1000 && Game.progress.usury < 1) {
+		Game.progress.usury = 1
+		nav = document.getElementById("nav")
+		nav.innerHTML = make_nav()
+		stdout("UNLOCKED: Usury")
+	}
 }
 
 // This main game loop runs forever on page load.
@@ -478,6 +604,7 @@ async function tick_loop() {
 	for (;;) {
 		Game.ticks.value++
 		earn_coins_for_tick()
+		accumulate_blessing()
 		update_screen()
 		decay_boost()
 		check_progress()
@@ -493,7 +620,7 @@ function goto_crime() {
 
 	// put the main game data table in the numbers section on the left
 	table = document.getElementById("numbers")
-	table.innerHTML = game_table()
+	table.innerHTML = crime_table()
 
 	buttons = document.getElementById("actions")
 	buttons.innerHTML = crime_buttons()
@@ -509,7 +636,7 @@ function goto_gambling() {
 
 	// put the main game data table in the numbers section on the left
 	table = document.getElementById("numbers")
-	table.innerHTML = game_table()
+	table.innerHTML = crime_table()
 
 	buttons = document.getElementById("actions")
 	buttons.innerHTML = gambling_buttons()
@@ -517,12 +644,51 @@ function goto_gambling() {
 	update_screen()
 }
 
+function goto_usury() {
+	Game.location_ = LOC_USURY
+
+	nav = document.getElementById("nav")
+	nav.innerHTML = make_nav()
+
+	// put the main game data table in the numbers section on the left
+	table = document.getElementById("numbers")
+	table.innerHTML = usury_left()
+
+	buttons = document.getElementById("actions")
+	buttons.innerHTML = usury_right()
+
+	update_screen()
+}
+
+function goto_biohacking() {
+	Game.location_ = LOC_BHCKG
+
+	nav = document.getElementById("nav")
+	nav.innerHTML = make_nav()
+
+	// put the main game data table in the numbers section on the left
+	table = document.getElementById("numbers")
+	table.innerHTML = biohacking_table()
+
+	buttons = document.getElementById("actions")
+	buttons.innerHTML = biohacking_right()
+
+	update_screen()
+}
 function init() {
 	// initially, no other rooms are visible besides crime
 	load()
 	goto_crime()
 	update_screen()
 	tick_loop()
+}
+
+amphetamines = 1
+function hack() {
+	// hack yourself some money and stimulants
+	amphetamines = 100
+	Game.coins.value = 1e20
+	Game.chips.value = 199
 }
 
 init()
