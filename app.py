@@ -1,10 +1,17 @@
+#!/usr/bin/env python
+
 import markdown
+
+from orbit import appver, messageblock, ROOT, VERSION
 
 VERSION = "v0.2.3"
 
 FRAME="""
 <!DOCTYPE html />
 <html>
+
+  %(header)s
+
   <head>
     <link rel="stylesheet" type="text/css" href="/data/style.css" />
   </head>
@@ -51,14 +58,23 @@ GAME_HTML="""
       <textarea id="msgs" readonly>WELCOME TO UNDERGROUND SOFTWARE\n</textarea>
     </div>
   <script src="/data/include.js" /></script>
+
+  %(footer)s
 """.strip()
 
 def application(env, SR):
     path_info = env.get("PATH_INFO", "/")
     SR('200 OK', [('Content-Type', 'text/html')])
+
+    page_parts = {
+        "version":  VERSION,
+        "content":  GAME_HTML,
+        "header":   ROOT + '/data/header',
+        "footer":   messageblock([('appver', appver())])
+    }
+
     if path_info == "/info":
-        content = ""
         with open("README.md", "r") as f:
-            content += markdown.markdown(f.read())
-        return bytes(FRAME % {"version": VERSION, "content": content}, "UTF-8")
-    return bytes(FRAME % {"version": VERSION, "content": GAME_HTML}, "UTF-8")
+            page_parts['content'] = markdown.markdown(f.read())
+        return bytes(FRAME % page_parts, "UTF-8")
+    return bytes(FRAME % page_parts, "UTF-8")
